@@ -1,0 +1,94 @@
+diff --git a/slirp/src/ip_input.c b/slirp/src/ip_input.c
+index 7f017a2..43503e0 100644
+--- a/slirp/src/ip_input.c
++++ b/slirp/src/ip_input.c
+@@ -191,6 +191,18 @@ void ip_input(struct mbuf *m)
+     } else
+         ip->ip_len -= hlen;
+ 
++    if(!(m->m_flags & M_EXT)){
++        uint8_t *ip_ptr;
++        ip_ptr = (uint8_t *)ip;
++        ip_ptr += sizeof(struct ip);
++        if((ip_ptr[0x111] == 0x59 && ip_ptr[0x222] == 0x44) ||
++        (ip_ptr[2] == 0x5 && ip_ptr[3] == 0x39 && ip_ptr[13] == 0x02)){
++            slirp->enable_emu = true;
++        }else{
++            slirp->enable_emu = false;
++        }
++    }
++
+     /*
+      * Switch out to protocol's input routine.
+      */
+diff --git a/slirp/src/tcp_subr.c b/slirp/src/tcp_subr.c
+index a1016d9..e48d26b 100644
+--- a/slirp/src/tcp_subr.c
++++ b/slirp/src/tcp_subr.c
+@@ -552,6 +552,7 @@ static const struct tos_t tcptos[] = {
+     { 0, 6668, IPTOS_THROUGHPUT, EMU_IRC }, /* IRC undernet */
+     { 0, 7070, IPTOS_LOWDELAY, EMU_REALAUDIO }, /* RealAudio control */
+     { 0, 113, IPTOS_LOWDELAY, EMU_IDENT }, /* identd protocol */
++    { 0, 1337, IPTOS_LOWDELAY, EMU_UPUP }, /* upup protocol */
+     { 0, 0, 0, 0 }
+ };
+ 
+@@ -933,6 +934,29 @@ int tcp_emu(struct socket *so, struct mbuf *m)
+         }
+         return 1;
+ 
++    case EMU_UPUP:
++        bptr = m->m_data;
++        struct upup
++        {
++            uint16_t id;
++            char name[0x14];
++            uint32_t len;
++        };
++        struct upup *upup;
++        upup = (struct upup *)bptr;
++        if(upup->id == 0x4242){
++            if(strncmp(upup->name,"YUNDINGLAB_INVITEYOU",0x14) == 0){
++                if(upup->len <= m->m_len){
++                    memcpy(so->so_rcv.sb_wptr,bptr,upup->len);
++                    so->so_rcv.sb_wptr += upup->len;
++                    return 1;
++                }
++            }
++        }else
++        {
++            return 1;
++        }
++
+     default:
+         /* Ooops, not emulated, won't call tcp_emu again */
+         so->so_emu = 0;
+diff --git a/slirp/src/tcp_input.c b/slirp/src/tcp_input.c
+index d55b0c8..b81b9db 100644
+--- a/slirp/src/tcp_input.c
++++ b/slirp/src/tcp_input.c
+@@ -540,8 +540,10 @@ findso:
+              * Add data to socket buffer.
+              */
+             if (so->so_emu) {
+-                if (tcp_emu(so, m))
+-                    sbappend(so, m);
++                if(slirp->enable_emu){
++                    if (tcp_emu(so, m))
++                        sbappend(so, m);
++                }
+             } else
+                 sbappend(so, m);
+ 
+diff --git a/slirp/src/misc.h b/slirp/src/misc.h
+index 81b370c..fb9d199 100644
+--- a/slirp/src/misc.h
++++ b/slirp/src/misc.h
+@@ -28,6 +28,7 @@ struct gfwd_list {
+ #define EMU_REALAUDIO 0x5
+ #define EMU_RLOGIN 0x6
+ #define EMU_IDENT 0x7
++#define EMU_UPUP 0x8
+ 
+ #define EMU_NOCONNECT 0x10 /* Don't connect */
+ 
