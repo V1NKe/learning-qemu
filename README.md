@@ -3,6 +3,7 @@
 ### ctf
 
 - done
+  - 2017-Blizzard-strng
   - 2018-Defcon-Quals-EC3
   - 2019-qwb-quals-qwct
   - 2019-qwb-final-ExecChrome
