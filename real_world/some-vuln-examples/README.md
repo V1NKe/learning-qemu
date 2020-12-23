@@ -1,6 +1,6 @@
 ## Description
 
-the virtio-2.6.0、vga-2.6.0、pcnet-2.2.0 is from the pdf example.
+the virtio-2.6.0、vga-2.6.0、pcnet-2.2.0 is from the (pdf)[https://github.com/V1NKe/learning-qemu/tree/master/doc/%E8%99%9A%E6%8B%9F%E5%8C%96%E5%AE%89%E5%85%A8%E4%B9%8BQEMU%E4%B8%8EKVM] example.
 
 There are 3 examples about qemu device vulnerability.
 
