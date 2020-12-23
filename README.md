@@ -15,7 +15,11 @@
 ### Real World
 
 - produce
-  - CVE-2019-6788
+  - CVE-2019-6788 (about slirp handle TCP/IP)
+  - CVE-2020-14364 (USB core out of bounds read and write)
+  - vitio-2.6.0 (null pointer reference)
+  - vga-2.6.0 (out of bounds read and write)
+  - pcnet-2.2.0 (out of bounds read and write)
 - find
   - .......
 
